@@ -38,6 +38,7 @@ var vertexShaderText = [
     gameScoreHeader.innerHTML=gamePoints;
     var pointsArray = [];
     var colorArray = [[0.078,0.56,0.164]]; //initialized with petry dish
+    var killedBacteria = 0;
 
     var InitClick = function() {
         
@@ -102,8 +103,8 @@ var vertexShaderText = [
         canvas.onmousedown = function(e) {
             var mx = e.clientX, my = e.clientY;
             let rect = canvas.getBoundingClientRect();
-            x = (mx -rect.left)/canvas.width;
-            y = (my - rect.top)/canvas.height;
+            x = (mx -rect.left)/dimension;
+            y = (my - rect.top)/dimension;
             var newCoords = numToNDC(x,y);
             x=newCoords[0];
             y=newCoords[1];
@@ -113,6 +114,7 @@ var vertexShaderText = [
                     bacteriaVertices.splice(i,1);
                     colorArray.splice(i,1);
                     randAngleArray.splice(i,1);
+                    killedBacteria++;
                     if(gamePoints>0)
                         gamePoints--;
                 }
@@ -126,10 +128,10 @@ var vertexShaderText = [
             drawDish(0,0,gl,program,x,y);
             loopCount++;
             if(gamePoints==2){
-                gameScoreHeader.innerHTML="You lost";
-                alert("Game Over. Try again?");
-                document.location.reload();
-                gamePoints = 0;
+                playerLoses();
+            }
+            else if(bacteriaVertices.length==0&&killedBacteria>0){
+                playerWins();
             }
             requestAnimationFrame(loop);
     
@@ -229,7 +231,7 @@ var vertexShaderText = [
             addColors();
     }
     function drawBacteria(gl, program, loopCount){
-        if(loopCount%100==0&&loopCount!=0&&bacteriaVertices.length<10){
+        if(loopCount%50==0&&loopCount!=0&&bacteriaVertices.length<10){
             addBacteria(bacteriaVertices.length, 0.65);
         } 
         if (loopCount%17==0&&loopCount!=0){
@@ -292,8 +294,8 @@ var vertexShaderText = [
         return d<=dishRad;
     }
     function isInBacteria(x,y,i){
-        let startAngle = randAngleArray[i]-15;
-        let endAngle = randAngleArray[i]+15;
+        let startAngle = randAngleArray[i]-(bacteriaVertices[i].length/2);
+        let endAngle = randAngleArray[i]+(bacteriaVertices[i].length/2);
         var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
         let angle = 0;
         angle = Math.atan2(y,x)*180/Math.PI;
@@ -316,4 +318,18 @@ var vertexShaderText = [
             newCoords[i] = Math.min(Math.max(newValue, newRange[i][0]) , newRange[i][1]);
         }
         return newCoords;
+    }
+    function playerWins(){
+        alert("You won!! You killed " + killedBacteria + " bacteria! Play again?");
+        resetGame();
+    }
+    function playerLoses(){
+        gameScoreHeader.innerHTML="You lost";
+        alert("Game Over. You killed " + killedBacteria +" bacteria! Try again?");
+        resetGame();
+    }
+    function resetGame(){
+        document.location.reload();
+        gamePoints = 0;
+        killedBacteria = 0;
     }
