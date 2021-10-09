@@ -101,12 +101,22 @@ var vertexShaderText = [
     
         canvas.onmousedown = function(e) {
             var mx = e.clientX, my = e.clientY;
-            mx = mx/dimension-0.5;
-            my = my/dimension-0.5;
-            mx *= 2;
-            my *= -2;
-            x = mx;
-            y = my;
+            let rect = canvas.getBoundingClientRect();
+            x = (mx -rect.left)/canvas.width;
+            y = (my - rect.top)/canvas.height;
+            var newCoords = numToNDC(x,y);
+            x=newCoords[0];
+            y=newCoords[1];
+            for(let i = 0; i<bacteriaVertices.length;i++){
+                if(isInBacteria(x,y,i)){
+                    console.log("Hit");
+                    bacteriaVertices.splice(i,1);
+                    colorArray.splice(i,1);
+                    randAngleArray.splice(i,1);
+                    if(gamePoints>0)
+                        gamePoints--;
+                }
+            }
         }
         
         var x = 0;
@@ -140,10 +150,6 @@ var vertexShaderText = [
             );
         }
     
-        var motion = new Float32Array(2);
-        motion[0] = 0.5;
-        motion[1] = 0.5;
-    
         var triangleVertexBufferObject = gl.createBuffer();
         //set the active buffer to the triangle buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject);
@@ -154,8 +160,6 @@ var vertexShaderText = [
     
         var positionAttribLocation = gl.getAttribLocation(program,'vertPosition');
         var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
-        var motionUniformLocation = gl.getUniformLocation(program, 'motion');
-    
         
         gl.vertexAttribPointer(
             positionAttribLocation, //attribute location
@@ -181,13 +185,6 @@ var vertexShaderText = [
         //////////////////////////////////
         //            Drawing           //
         //////////////////////////////////
-            
-        
-        
-        motion[0] = x;
-        motion[1] = y;
-        gl.uniform2fv(motionUniformLocation, motion);
-    
         gl.clearColor = (0.5, 0.8, 0.8, 1.0);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, circleVertices.length/2);
     }
@@ -282,7 +279,6 @@ var vertexShaderText = [
             colors = [Math.random(),Math.random(),Math.random()];
         }while(isInArray(colorArray,colors));
         colorArray.push(colors);
-        console.log(colorArray);
     }
     function isInArray(arr,item){
         var item_as_string = JSON.stringify(item);
@@ -290,4 +286,34 @@ var vertexShaderText = [
             return JSON.stringify(ele)==item_as_string;
         });
         return contains;
+    }
+    function isInDish(x,y){
+        var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+        return d<=dishRad;
+    }
+    function isInBacteria(x,y,i){
+        let startAngle = randAngleArray[i]-15;
+        let endAngle = randAngleArray[i]+15;
+        var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+        let angle = 0;
+        angle = Math.atan2(y,x)*180/Math.PI;
+        if(y<0){
+            angle = 360+angle;
+        }
+        console.log(angle, startAngle, endAngle, d<0.65);
+        if(angle>= startAngle&&angle<=endAngle&&d<0.65&&!isInDish(x,y)){
+            return true;
+        }
+        return false;
+    }
+    function numToNDC(x,y){
+        var coords = [x,y];
+        var oldRange = [[0,1],[1,0]];
+        var newRange = [[-1,1],[-1,1]];
+        var newCoords = [];
+        for(let i =0; i<coords.length;i++){
+            var newValue = (coords[i] - oldRange[i][0]) * (newRange[i][1] - newRange[i][0]) / (oldRange[i][1] - oldRange[i][0]) + newRange[i][0];
+            newCoords[i] = Math.min(Math.max(newValue, newRange[i][0]) , newRange[i][1]);
+        }
+        return newCoords;
     }
