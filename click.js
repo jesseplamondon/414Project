@@ -138,7 +138,7 @@ var vertexShaderText = [
                 //checking if there are touching bacteria and joining them if there are
                /*  for(let i = 0; i<bacteriaVertices.length;i++){
                     isTouchingAny(i);
-                } */
+                }  */
                 requestAnimationFrame(loop);
             }
         };
@@ -285,43 +285,26 @@ var vertexShaderText = [
     //not working yet
     function isTouchingAny(a){
         for(let i = 0; i<bacteriaVertices.length; i++){
-            var x = randAngleArray[a]-randAngleArray[i];
-            var cw = x<0;
-            var diff = Math.abs(x);
-            var start = 0;
-            var length = 0;
             var add = [];
-            if(diff<bacteriaVertices[a].length/2+bacteriaVertices[i].length/2&&diff!=0){
-                if(bacteriaVertices[a].length>bacteriaVertices[i].length){
-                    if(cw){
-                        start = bacteriaVertices[a].length/2+1;
-                        length = bacteriaVertices[a].length-1;
-                        for(let j = start;j<length+start;j++){
-                            if(bacteriaVertices[a][j]<bacteriaVertices[i][2]){
-                                add.push(bacteriaVertices[a][j]);
-                            }
-                        }
-                        for(let q = 0; q<add.length; q++){
-                            bacteriaVertices[i].splice(2,0, add[q]);
-                        }
-                    }
-                    else{
-                        start = 2;
-                        length = bacteriaVertices[a].length-1;
-                        for(let j = start;j<length+start;j++){
-                            if(bacteriaVertices[a][j]>bacteriaVertices[i][bacteriaVertices[i].length-1]){
-                                add.push(bacteriaVertices[a][j]);
-                            }
-                        }
-                        for(let q = 0; q<add.length; q++){
-                            bacteriaVertices[i].push(add[q]);
-                        }
-                    }
-                    bacteriaVertices.splice(a,1);
-                    colorArray.splice(a,1);
-                    console.log(bacteriaVertices);
+            var overlap = false;
+            for(let v = 1; v<bacteriaVertices[i].length;v+=2){
+                var aLength = bacteriaVertices[a].length;
+                var iLength = bacteriaVertices[i].length;
+                var aLeftAngle = getAngle(bacteriaVertices[a][aLength-2],bacteriaVertices[a][aLength-1]);
+                var aRightAngle = getAngle(bacteriaVertices[a][1],bacteriaVertices[a][2]);
+                var iLeftAngle = getAngle(bacteriaVertices[i][iLength-2],bacteriaVertices[i][iLength-1]);
+                var iRightAngle = getAngle(bacteriaVertices[i][1],bacteriaVertices[i][2]);
+                var iAngle = getAngle(bacteriaVertices[i][v],bacteriaVertices[i][v+1]);
+                if((aLeftAngle<iLeftAngle&&aLeftAngle>iAngle)||(aRightAngle<iLeftAngle&&aRightAngle>iAngle)){
+                    add.push(bacteriaVertices[i][v], bacteriaVertices[i][v+1]);
+                    overlap = true;
                 }
             }
+            if(overlap&&bacteriaVertices[a]){
+                bacteriaVertices.splice(a,1);
+                colorArray.splice(a,1);
+            }
+            
         }
     }
     function addColors(){
@@ -342,15 +325,20 @@ var vertexShaderText = [
         var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
         return d<=dishRad;
     }
+    function getAngle(x,y){
+
+        var angle = Math.atan2(y,x)*180/Math.PI;
+        if(y<0){
+            angle = 360+angle;
+        }
+        return angle;
+    }
     function isInBacteria(x,y,i){
         let startAngle = randAngleArray[i]-(bacteriaVertices[i].length/2);
         let endAngle = randAngleArray[i]+(bacteriaVertices[i].length/2);
         var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
         let angle = 0;
-        angle = Math.atan2(y,x)*180/Math.PI;
-        if(y<0){
-            angle = 360+angle;
-        }
+        angle = getAngle(x,y);
         if(angle>= startAngle&&angle<=endAngle&&d<0.65&&!isInDish(x,y)){
             return true;
         }
