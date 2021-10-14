@@ -17,7 +17,7 @@ var vertexShaderText = [
     [
     'precision mediump float;',
     
-    'uniform vec3 fragColor;',
+    'varying vec3 fragColor;',
     
     'void main()',
     '{',
@@ -31,6 +31,7 @@ var vertexShaderText = [
     var loopCount = 0;
     var dimension = 0;
     var dishRad = 0.6;
+    var bacteriaWidth = 0.06;
     var randAngleArray = [];
     var center = [0, 0];
     var gamePoints = 0;
@@ -134,6 +135,10 @@ var vertexShaderText = [
                 drawBacteria(gl,program, loopCount);
                 drawDish(0,0,gl,program,x,y);
                 loopCount++;
+                //checking if there are touching bacteria and joining them if there are
+               /*  for(let i = 0; i<bacteriaVertices.length;i++){
+                    isTouchingAny(i);
+                } */
                 requestAnimationFrame(loop);
             }
         };
@@ -181,18 +186,18 @@ var vertexShaderText = [
             2*Float32Array.BYTES_PER_ELEMENT
         ); 
         gl.enableVertexAttribArray(positionAttribLocation);
-        gl.enableVertexAttribArray(colorAttribLocation);
+        gl.disableVertexAttribArray(colorAttribLocation);
+        gl.vertexAttrib4f(colorAttribLocation, 0.5, 0.8, 0.8, 1.0);
         //gl.uniform2fv(motionUniformLocation, motion);
         gl.useProgram(program);
         
         //////////////////////////////////
         //            Drawing           //
         //////////////////////////////////
-        gl.clearColor(0.5, 0.8, 0.8, 1.0);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, circleVertices.length/2);
     }
     function spreadBacteria(){
-        var radius = 0.65;
+        var radius = dishRad+bacteriaWidth;
         if(bacteriaVertices.length>0){
             for(let i = 0; i<bacteriaVertices.length;i++){
                 if(bacteriaVertices[i].length<=30){
@@ -206,6 +211,7 @@ var vertexShaderText = [
                     bacteriaVertices[i].splice(3,0,
                         center[1] + radius * Math.sin((randAngleArray[i]-(bacteriaVertices[i].length)/4)*Math.PI/180)
                     );
+
                     //setting game score text bar based on time bacteria is allowed to spread
                     
                 }
@@ -217,34 +223,29 @@ var vertexShaderText = [
             }
         }
         else{
-            addBacteria(0, radius);
+            addBacteria(0);
         }
     }
-    function addBacteria(i, radius){
+    function addBacteria(i){
         let randAngle = Math.random() * 360;
         pointsArray.push(false);
             randAngleArray.push(randAngle);
             bacteriaVertices.push([center[0], center[1]]);
             bacteriaVertices[i].push(
-                radius * Math.cos(randAngle*Math.PI / 180),
-                radius * Math.sin(randAngle*Math.PI / 180));
+                (dishRad+bacteriaWidth) * Math.cos(randAngle*Math.PI / 180),
+                (dishRad+bacteriaWidth) * Math.sin(randAngle*Math.PI / 180));
             addColors();
     }
     function drawBacteria(gl, program, loopCount){
-        if(loopCount%52==0&&loopCount!=0&&bacteriaVertices.length<10){
+        if(loopCount%30==0&&loopCount!=0&&bacteriaVertices.length<10){
             addBacteria(bacteriaVertices.length, 0.65);
         } 
-        if (loopCount%17==0&&loopCount!=0){
+        if (loopCount%15==0&&loopCount!=0){
             spreadBacteria();
         }
         //drawing all bacteria in bacteriaVertices array
         for(let i = 0; i<bacteriaVertices.length; i++){
-            var colorBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            console.log()
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorArray[i][0], colorArray[i][1], colorArray[i][2]), gl.STATIC_DRAW);
-            //var colorAttribLocation = gl.getUniformLocation(program, 'fragColor');
-            var u_FragColor = gl.getUniformLocation(program, 'fragColor');
+            var bacteriaAttribLocation = gl.getAttribLocation(program, 'vertColor');
             var bacteriaVertexBufferObject = gl.createBuffer();
             //set the active buffer to the triangle buffer
             gl.bindBuffer(gl.ARRAY_BUFFER, bacteriaVertexBufferObject);
@@ -265,22 +266,64 @@ var vertexShaderText = [
                 2*Float32Array.BYTES_PER_ELEMENT,//size of an individual vertex
                 0*Float32Array.BYTES_PER_ELEMENT//offset from the beginning of a single vertex to this attribute
                 );
-             /* gl.vertexAttribPointer(
-                colorAttribLocation, //attributeLocation
+             gl.vertexAttribPointer(
+                bacteriaAttribLocation, //attributeLocation
                 3, //number of elements per attribute
                 gl.FLOAT,
                 gl.FALSE,
                 5*Float32Array.BYTES_PER_ELEMENT,
                 2*Float32Array.BYTES_PER_ELEMENT
-            );  */
+            );
             gl.enableVertexAttribArray(positionAttribLocation);
-            gl.enableVertexAttribArray(u_FragColor);
-            gl.uniform4fv(u_FragColor, new Float32Array(colorArray[i][0], colorArray[i][1], colorArray[i][2]), 1.0);
+            gl.disableVertexAttribArray(bacteriaAttribLocation);
+            gl.vertexAttrib4f(bacteriaAttribLocation, colorArray[i][0], colorArray[i][1], colorArray[i][2], 1.0);
+            //gl.uniform3fv(u_FragColor, new Float32Array(colorArray[i][0], colorArray[i][1], colorArray[i][2]), 0);
             gl.useProgram(program);
             gl.drawArrays(gl.TRIANGLE_FAN, 0, bacteriaVertices[i].length/2);
         }
     }
-    
+    //not working yet
+    function isTouchingAny(a){
+        for(let i = 0; i<bacteriaVertices.length; i++){
+            var x = randAngleArray[a]-randAngleArray[i];
+            var cw = x<0;
+            var diff = Math.abs(x);
+            var start = 0;
+            var length = 0;
+            var add = [];
+            if(diff<bacteriaVertices[a].length/2+bacteriaVertices[i].length/2&&diff!=0){
+                if(bacteriaVertices[a].length>bacteriaVertices[i].length){
+                    if(cw){
+                        start = bacteriaVertices[a].length/2+1;
+                        length = bacteriaVertices[a].length-1;
+                        for(let j = start;j<length+start;j++){
+                            if(bacteriaVertices[a][j]<bacteriaVertices[i][2]){
+                                add.push(bacteriaVertices[a][j]);
+                            }
+                        }
+                        for(let q = 0; q<add.length; q++){
+                            bacteriaVertices[i].splice(2,0, add[q]);
+                        }
+                    }
+                    else{
+                        start = 2;
+                        length = bacteriaVertices[a].length-1;
+                        for(let j = start;j<length+start;j++){
+                            if(bacteriaVertices[a][j]>bacteriaVertices[i][bacteriaVertices[i].length-1]){
+                                add.push(bacteriaVertices[a][j]);
+                            }
+                        }
+                        for(let q = 0; q<add.length; q++){
+                            bacteriaVertices[i].push(add[q]);
+                        }
+                    }
+                    bacteriaVertices.splice(a,1);
+                    colorArray.splice(a,1);
+                    console.log(bacteriaVertices);
+                }
+            }
+        }
+    }
     function addColors(){
         var colors = [];
         do{
@@ -308,7 +351,6 @@ var vertexShaderText = [
         if(y<0){
             angle = 360+angle;
         }
-        console.log(angle, startAngle, endAngle, d<0.65);
         if(angle>= startAngle&&angle<=endAngle&&d<0.65&&!isInDish(x,y)){
             return true;
         }
