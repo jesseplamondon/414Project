@@ -36,7 +36,6 @@ var vertexShaderText = [
     var center = [0, 0];
     var gamePoints = 0;
     var gameScoreHeader = document.getElementById("game-score");
-    gameScoreHeader.innerHTML=gamePoints;
     var pointsArray = [];
     var colorArray = [[0.078,0.56,0.164]]; //initialized with petry dish
     var killedBacteria = 0;
@@ -46,7 +45,6 @@ var vertexShaderText = [
         //////////////////////////////////
         //       initialize WebGL       //
         //////////////////////////////////
-        console.log('this is working');
     
         var canvas = document.getElementById('game-surface');
         var gl = canvas.getContext('webgl');
@@ -109,7 +107,6 @@ var vertexShaderText = [
             y=newCoords[1];
             for(let i = 0; i<bacteriaVertices.length;i++){
                 if(isInBacteria(x,y,i)){
-                    console.log("Hit");
                     if(bacteriaVertices[i].length==30){
                         gamePoints--;
                     }
@@ -136,9 +133,10 @@ var vertexShaderText = [
                 drawDish(0,0,gl,program,x,y);
                 loopCount++;
                 //checking if there are touching bacteria and joining them if there are
-               /*  for(let i = 0; i<bacteriaVertices.length;i++){
+               for(let i = 0; i<bacteriaVertices.length;i++){
                     isTouchingAny(i);
-                }  */
+                } 
+                gameScoreHeader.innerHTML=gamePoints;
                 requestAnimationFrame(loop);
             }
         };
@@ -198,13 +196,15 @@ var vertexShaderText = [
     }
     function spreadBacteria(){
         var radius = dishRad+bacteriaWidth;
+        var maxLength = 62;
         if(bacteriaVertices.length>0){
             for(let i = 0; i<bacteriaVertices.length;i++){
-                if(bacteriaVertices[i].length<=30){
+                if(bacteriaVertices[i].length<=maxLength){
                     bacteriaVertices[i].push(
                         center[0] + radius * Math.cos((randAngleArray[i]+bacteriaVertices[i].length/2)*Math.PI/180),
                         center[1] + radius * Math.sin((randAngleArray[i]+(bacteriaVertices[i].length)/2)*Math.PI/180)
                     )
+                if(bacteriaVertices[i].length<=maxLength){
                     bacteriaVertices[i].splice(2,0,
                         center[0] + radius * Math.cos((randAngleArray[i]-bacteriaVertices[i].length/4)*Math.PI/180)
                     );
@@ -213,8 +213,8 @@ var vertexShaderText = [
                     );
 
                     //setting game score text bar based on time bacteria is allowed to spread
-                    
                 }
+            }
                 else if(!pointsArray[i]){
                     pointsArray[i]=true;
                     gamePoints++;
@@ -227,8 +227,21 @@ var vertexShaderText = [
         }
     }
     function addBacteria(i){
-        let randAngle = Math.random() * 360;
         pointsArray.push(false);
+        let randAngle = 0;
+        do{
+            var onTop = false;
+            randAngle = Math.random() * 360;
+            for(let i = 0; i<bacteriaVertices.length; i++){
+                len = bacteriaVertices[i].length;
+                var leftAngle = getAngle(bacteriaVertices[i][len-2],bacteriaVertices[i][len-1]);
+                var rightAngle = getAngle(bacteriaVertices[i][2],bacteriaVertices[i][3]);
+                if(randAngle>=rightAngle&&randAngle<=leftAngle){
+                    console.log("You're welcome!");
+                    onTop=true;
+                }
+            }
+        }while(onTop)
             randAngleArray.push(randAngle);
             bacteriaVertices.push([center[0], center[1]]);
             bacteriaVertices[i].push(
@@ -237,10 +250,10 @@ var vertexShaderText = [
             addColors();
     }
     function drawBacteria(gl, program, loopCount){
-        if(loopCount%30==0&&loopCount!=0&&bacteriaVertices.length<10){
+        if(loopCount%45==0&&loopCount!=0&&bacteriaVertices.length<10){
             addBacteria(bacteriaVertices.length, 0.65);
         } 
-        if (loopCount%15==0&&loopCount!=0){
+        if (loopCount%21==0&&loopCount!=0){
             spreadBacteria();
         }
         //drawing all bacteria in bacteriaVertices array
@@ -285,26 +298,36 @@ var vertexShaderText = [
     //not working yet
     function isTouchingAny(a){
         for(let i = 0; i<bacteriaVertices.length; i++){
-            var add = [];
-            var overlap = false;
-            for(let v = 1; v<bacteriaVertices[i].length;v+=2){
-                var aLength = bacteriaVertices[a].length;
-                var iLength = bacteriaVertices[i].length;
-                var aLeftAngle = getAngle(bacteriaVertices[a][aLength-2],bacteriaVertices[a][aLength-1]);
-                var aRightAngle = getAngle(bacteriaVertices[a][1],bacteriaVertices[a][2]);
-                var iLeftAngle = getAngle(bacteriaVertices[i][iLength-2],bacteriaVertices[i][iLength-1]);
-                var iRightAngle = getAngle(bacteriaVertices[i][1],bacteriaVertices[i][2]);
-                var iAngle = getAngle(bacteriaVertices[i][v],bacteriaVertices[i][v+1]);
-                if((aLeftAngle<iLeftAngle&&aLeftAngle>iAngle)||(aRightAngle<iLeftAngle&&aRightAngle>iAngle)){
-                    add.push(bacteriaVertices[i][v], bacteriaVertices[i][v+1]);
-                    overlap = true;
+            if(i!=a){
+                var overlap = false;
+                let centreAngle = getAngle(bacteriaVertices[i][bacteriaVertices[i].length],bacteriaVertices[i][bacteriaVertices[i].length+1]);
+                if(bacteriaVertices[a].length>=bacteriaVertices[i].length){
+                    for(let v = 2; v<bacteriaVertices[i].length;v+=2){
+                        var aLength = bacteriaVertices[a].length;
+                        var iLength = bacteriaVertices[i].length;
+                        var aLeftAngle = getAngle(bacteriaVertices[a][aLength-2],bacteriaVertices[a][aLength-1]);
+                        var aRightAngle = getAngle(bacteriaVertices[a][2],bacteriaVertices[a][3]);
+                        var iLeftAngle = getAngle(bacteriaVertices[i][iLength-2],bacteriaVertices[i][iLength-1]);
+                        var iAngle = getAngle(bacteriaVertices[i][v],bacteriaVertices[i][v+1]);
+                        if((aLeftAngle<iLeftAngle&&aLeftAngle>iAngle)||(aRightAngle<iLeftAngle&&aRightAngle>iAngle)){
+                            if(iAngle>centreAngle){
+                                bacteriaVertices[a].push(bacteriaVertices[i][v], bacteriaVertices[i][v+1]);
+                            }else {
+                                bacteriaVertices[a].splice(2, 0, bacteriaVertices[i][v]);
+                                bacteriaVertices[a].splice(3, 0, bacteriaVertices[i][v+1]);
+                                v+=2;
+                            }
+                            overlap = true;
+                        }
+                    }
                 }
             }
-            if(overlap&&bacteriaVertices[a]){
-                bacteriaVertices.splice(a,1);
-                colorArray.splice(a,1);
+            if(overlap){
+                bacteriaVertices.splice(i,1);
+                colorArray.splice(i,1);
+                randAngleArray.splice(i,1);
+                i--;
             }
-            
         }
     }
     function addColors(){
@@ -334,13 +357,19 @@ var vertexShaderText = [
         return angle;
     }
     function isInBacteria(x,y,i){
-        let startAngle = randAngleArray[i]-(bacteriaVertices[i].length/2);
-        let endAngle = randAngleArray[i]+(bacteriaVertices[i].length/2);
+        var len = bacteriaVertices[i].length;
+        var leftAngle = getAngle(bacteriaVertices[i][len-2],bacteriaVertices[i][len-1]);
+        var rightAngle = getAngle(bacteriaVertices[i][2],bacteriaVertices[i][3]);
         var d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
         let angle = 0;
         angle = getAngle(x,y);
-        if(angle>= startAngle&&angle<=endAngle&&d<0.65&&!isInDish(x,y)){
+        if(angle>= rightAngle&&angle<=leftAngle&&d<bacteriaWidth+dishRad&&!isInDish(x,y)){
             return true;
+        }
+        else if(rightAngle>100+leftAngle){
+            if(angle<leftAngle||angle>rightAngle){
+                return true;
+            }
         }
         return false;
     }

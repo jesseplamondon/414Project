@@ -1,3 +1,10 @@
 canvas{ 
     text-align: center;
 }
+h2{
+    font-family: 'Courier New', monospace;
+}
+div{
+    float: left;
+    padding: 15px;
+}
