@@ -301,10 +301,9 @@ var vertexShaderText = [
     function isTouchingAny(a){
         if(bacteriaVertices[a].length<62){
             for(let i = 0; i<bacteriaVertices.length; i++){
-                if(i!=a){
                     var overlap = false;
                     let centreAngle = getAngle(bacteriaVertices[i][bacteriaVertices[i].length],bacteriaVertices[i][bacteriaVertices[i].length+1]);
-                    if(bacteriaVertices[a].length>=bacteriaVertices[i].length){
+                    if(a<i){
                         for(let v = 2; v<bacteriaVertices[i].length;v+=2){
                             var aLength = bacteriaVertices[a].length;
                             var iLength = bacteriaVertices[i].length;
@@ -324,7 +323,7 @@ var vertexShaderText = [
                             }
                         }
                     }
-                }
+                
                 if(overlap){
                     bacteriaVertices.splice(i,1);
                     colorArray.splice(i,1);
