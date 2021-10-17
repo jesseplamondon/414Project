@@ -1,10 +1,16 @@
 canvas{ 
-    text-align: center;
+    position: relative;
+    bottom: 120px;
+    right: 20px;
 }
 h2{
     font-family: 'Courier New', monospace;
 }
-div{
-    float: left;
-    padding: 15px;
+body{
+    background-color: #C09591;
+}
+.title{
+    float: right;
+    position: relative;
+    bottom: 70px;
 }

@@ -107,14 +107,17 @@ var vertexShaderText = [
             y=newCoords[1];
             for(let i = 0; i<bacteriaVertices.length;i++){
                 if(isInBacteria(x,y,i)){
-                    if(bacteriaVertices[i].length==30){
-                        gamePoints--;
+                    if(bacteriaVertices[i].length>=62){
+                        if(gamePoints>0){
+                            gamePoints--;
+                        }
                     }
                     bacteriaVertices.splice(i,1);
                     colorArray.splice(i,1);
                     randAngleArray.splice(i,1);
+                    pointsArray.splice(i,1);
                     killedBacteria++;
-                    
+                    gameScoreHeader.innerHTML=gamePoints;
                 }
             }
         }
@@ -204,17 +207,17 @@ var vertexShaderText = [
                         center[0] + radius * Math.cos((randAngleArray[i]+bacteriaVertices[i].length/2)*Math.PI/180),
                         center[1] + radius * Math.sin((randAngleArray[i]+(bacteriaVertices[i].length)/2)*Math.PI/180)
                     )
-                if(bacteriaVertices[i].length<=maxLength){
-                    bacteriaVertices[i].splice(2,0,
-                        center[0] + radius * Math.cos((randAngleArray[i]-bacteriaVertices[i].length/4)*Math.PI/180)
-                    );
-                    bacteriaVertices[i].splice(3,0,
-                        center[1] + radius * Math.sin((randAngleArray[i]-(bacteriaVertices[i].length)/4)*Math.PI/180)
-                    );
+                    if(bacteriaVertices[i].length<=maxLength){
+                        bacteriaVertices[i].splice(2,0,
+                            center[0] + radius * Math.cos((randAngleArray[i]-bacteriaVertices[i].length/4)*Math.PI/180)
+                        );
+                        bacteriaVertices[i].splice(3,0,
+                            center[1] + radius * Math.sin((randAngleArray[i]-(bacteriaVertices[i].length)/4)*Math.PI/180)
+                        );
 
-                    //setting game score text bar based on time bacteria is allowed to spread
+                        //setting game score text bar based on time bacteria is allowed to spread
+                    }
                 }
-            }
                 else if(!pointsArray[i]){
                     pointsArray[i]=true;
                     gamePoints++;
@@ -237,7 +240,6 @@ var vertexShaderText = [
                 var leftAngle = getAngle(bacteriaVertices[i][len-2],bacteriaVertices[i][len-1]);
                 var rightAngle = getAngle(bacteriaVertices[i][2],bacteriaVertices[i][3]);
                 if(randAngle>=rightAngle&&randAngle<=leftAngle){
-                    console.log("You're welcome!");
                     onTop=true;
                 }
             }
@@ -250,10 +252,10 @@ var vertexShaderText = [
             addColors();
     }
     function drawBacteria(gl, program, loopCount){
-        if(loopCount%45==0&&loopCount!=0&&bacteriaVertices.length<10){
+        if(loopCount%52==0&&loopCount!=0&&bacteriaVertices.length<10){
             addBacteria(bacteriaVertices.length, 0.65);
         } 
-        if (loopCount%21==0&&loopCount!=0){
+        if (loopCount%28==0&&loopCount!=0){
             spreadBacteria();
         }
         //drawing all bacteria in bacteriaVertices array
@@ -297,36 +299,39 @@ var vertexShaderText = [
     }
     //not working yet
     function isTouchingAny(a){
-        for(let i = 0; i<bacteriaVertices.length; i++){
-            if(i!=a){
-                var overlap = false;
-                let centreAngle = getAngle(bacteriaVertices[i][bacteriaVertices[i].length],bacteriaVertices[i][bacteriaVertices[i].length+1]);
-                if(bacteriaVertices[a].length>=bacteriaVertices[i].length){
-                    for(let v = 2; v<bacteriaVertices[i].length;v+=2){
-                        var aLength = bacteriaVertices[a].length;
-                        var iLength = bacteriaVertices[i].length;
-                        var aLeftAngle = getAngle(bacteriaVertices[a][aLength-2],bacteriaVertices[a][aLength-1]);
-                        var aRightAngle = getAngle(bacteriaVertices[a][2],bacteriaVertices[a][3]);
-                        var iLeftAngle = getAngle(bacteriaVertices[i][iLength-2],bacteriaVertices[i][iLength-1]);
-                        var iAngle = getAngle(bacteriaVertices[i][v],bacteriaVertices[i][v+1]);
-                        if((aLeftAngle<iLeftAngle&&aLeftAngle>iAngle)||(aRightAngle<iLeftAngle&&aRightAngle>iAngle)){
-                            if(iAngle>centreAngle){
-                                bacteriaVertices[a].push(bacteriaVertices[i][v], bacteriaVertices[i][v+1]);
-                            }else {
-                                bacteriaVertices[a].splice(2, 0, bacteriaVertices[i][v]);
-                                bacteriaVertices[a].splice(3, 0, bacteriaVertices[i][v+1]);
-                                v+=2;
+        if(bacteriaVertices[a].length<62){
+            for(let i = 0; i<bacteriaVertices.length; i++){
+                if(i!=a){
+                    var overlap = false;
+                    let centreAngle = getAngle(bacteriaVertices[i][bacteriaVertices[i].length],bacteriaVertices[i][bacteriaVertices[i].length+1]);
+                    if(bacteriaVertices[a].length>=bacteriaVertices[i].length){
+                        for(let v = 2; v<bacteriaVertices[i].length;v+=2){
+                            var aLength = bacteriaVertices[a].length;
+                            var iLength = bacteriaVertices[i].length;
+                            var aLeftAngle = getAngle(bacteriaVertices[a][aLength-2],bacteriaVertices[a][aLength-1]);
+                            var aRightAngle = getAngle(bacteriaVertices[a][2],bacteriaVertices[a][3]);
+                            var iLeftAngle = getAngle(bacteriaVertices[i][iLength-2],bacteriaVertices[i][iLength-1]);
+                            var iAngle = getAngle(bacteriaVertices[i][v],bacteriaVertices[i][v+1]);
+                            if((aLeftAngle<iLeftAngle&&aLeftAngle>iAngle)||(aRightAngle<iLeftAngle&&aRightAngle>iAngle)){
+                                if(iAngle>centreAngle){
+                                    bacteriaVertices[a].push(bacteriaVertices[i][v], bacteriaVertices[i][v+1]);
+                                }else {
+                                    bacteriaVertices[a].splice(2, 0, bacteriaVertices[i][v]);
+                                    bacteriaVertices[a].splice(3, 0, bacteriaVertices[i][v+1]);
+                                    v+=2;
+                                }
+                                overlap = true;
                             }
-                            overlap = true;
                         }
                     }
                 }
-            }
-            if(overlap){
-                bacteriaVertices.splice(i,1);
-                colorArray.splice(i,1);
-                randAngleArray.splice(i,1);
-                i--;
+                if(overlap){
+                    bacteriaVertices.splice(i,1);
+                    colorArray.splice(i,1);
+                    randAngleArray.splice(i,1);
+                    pointsArray.splice(i,1);
+                    i--;
+                }
             }
         }
     }
