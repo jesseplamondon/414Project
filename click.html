@@ -8,12 +8,23 @@
     </head>
 
     <body onload="InitClick()">
-        <div class="score">
-            <h2 id = "game-score">0</h2>
-        </div>
+        
         <div class="title">
-            <h2 id = "game-title">Super Bug Zapper</h2>
+            <h2 id="game-title">Super Bug Zapper</h2>
         </div>
+        <div class="header">
+            <div class="score-titles">
+                <div id="game-score-title">Score</div>
+                <div id="bacteria-count-title">Killed Bacteria</div>
+            </div>
+            
+            <div class="score-display">
+                <div id="game-score">0</div>
+                <div id="bacteria-count">0</div>
+            </div>
+            <h2 id="message-display">Kill The Bacteria!</h2>
+        </div>
+        
         <canvas id="game-surface" width="1000" height="1000">
         </canvas>
     </body>
