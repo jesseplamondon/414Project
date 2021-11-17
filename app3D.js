@@ -63,7 +63,7 @@ var InitDemo = function() {
 	//////////////////////////////////
 	//       initialize WebGL       //
 	//////////////////////////////////
-	console.log('this is working');
+	//console.log('this is working');
 
 	var canvas = document.getElementById('game-surface');
 	var gl = canvas.getContext('webgl');
@@ -113,8 +113,6 @@ var InitDemo = function() {
 		return;
 	}
 
-
-
 	var sphereVertices = [], indices = [];
     var i, ai, si, ci;
     var j, aj, sj, cj;
@@ -154,7 +152,6 @@ var InitDemo = function() {
 			colors.push(0,0,i/(sphereVertices.length/3));
 		 }
          
-
          // Create and store data into vertex buffer
          var vertex_buffer = gl.createBuffer ();
          gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
@@ -311,35 +308,54 @@ var InitDemo = function() {
 	}		
 	requestAnimationFrame(loop);
 	//file:///D:/courses/COSC414%20(Graphics)/Lab/index.html
+      
+      /** Builds the mouse move handler for the canvas.
+      
+          Returns:
+            A function to be used as the mousemove handler on the canvas.
+      */
+    
+    var drag = false;
+    var oldX, oldY;
+    var dX = 0, dY = 0;
+    var endX;
+    var endY;
 
-	canvas.onmousedown = function(ev) {
-		
-		angle = performance.now() / 1000;
-		mat4.fromRotation(rotx,angle,[1,0,0]);
-		mat4.fromRotation(rotz,angle,[0,0,1]);
-		mat4.multiply(world,rotz,rotx);
-		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
+    canvas.onmousedown = function(ev){
+        drag = true;
+        oldX = ev.pageX; 
+        oldY = ev.pageY;
+        ev.preventDefault();
+        console.log('this is working');
+        return false;
+    };
+
+    canvas.onmouseup = function(ev){
+        drag = false;
+        console.log('this is working');
+    };
+
+    canvas.onmousemove = function(ev){
+        if (!drag) return false;
+        dX = (ev.pageX-oldX)*2*Math.PI/canvas.width;
+        dY = (ev.pageY-oldY)*2*Math.PI/canvas.height;
+        endX += dX;
+        endY += dY;
+        oldX = ev.pageX; 
+        oldY = ev.pageY;
+        ev.preventDefault();
+        mat4.fromRotation(rotx, oldX/100, [1,0,0]);
+        mat4.fromRotation(rotz, oldY/100, [0,0,1]);
+        mat4.multiply(world, rotz, rotx);
+        gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
 		gl.clearColor(0.5,0.8,0.8,1.0);
 		gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
 	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+        console.log('this is working');
+    };
 
-		var pixelValues = new Uint8Array(4);
-		gl.readPixels(ev.clientX, ev.clientY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues); 
-
-
-		if(pixelValues[0] == 255 && pixelValues[1] == 255)
-			alert("Yellow");
-		else if(pixelValues[0] == 255 && pixelValues[2] == 255)
-			alert("Purple");
-		else if(pixelValues[0] == 255)
-			alert("Red");
-		else if(pixelValues[1] == 255)
-			alert("Green");
-	}
-
-	
 };
 function drawBacteria(gl, program, loopCount) {
     if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length < 10) {
