@@ -316,15 +316,13 @@ var InitDemo = function() {
       */
     
     var drag = false;
+    var beginX, beginY;
     var oldX, oldY;
-    var dX = 0, dY = 0;
-    var endX;
-    var endY;
 
     canvas.onmousedown = function(ev){
         drag = true;
-        oldX = ev.pageX; 
-        oldY = ev.pageY;
+        beginX = ev.pageX; 
+        beginY = ev.pageY;
         ev.preventDefault();
         console.log('this is working');
         return false;
@@ -337,15 +335,12 @@ var InitDemo = function() {
 
     canvas.onmousemove = function(ev){
         if (!drag) return false;
-        dX = (ev.pageX-oldX)*2*Math.PI/canvas.width;
-        dY = (ev.pageY-oldY)*2*Math.PI/canvas.height;
-        endX += dX;
-        endY += dY;
-        oldX = ev.pageX; 
+        oldX = ev.pageX;
         oldY = ev.pageY;
         ev.preventDefault();
-        mat4.fromRotation(rotx, oldX/100, [1,0,0]);
-        mat4.fromRotation(rotz, oldY/100, [0,0,1]);
+        console.log(oldX - beginX);
+        mat4.fromRotation(rotx, (oldX - beginX)/100, [1,0,0]);
+        mat4.fromRotation(rotz, (oldY - beginY)/100, [0,0,1]);
         mat4.multiply(world, rotz, rotx);
         gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
 		gl.clearColor(0.5,0.8,0.8,1.0);
