@@ -1,0 +1,43 @@
+canvas{ 
+    position: relative;
+    bottom: 120px;
+    right: 20px;
+}
+h2{
+    font-family: 'Courier New', monospace;
+}
+body{
+    background-color: #C09591;
+}
+.header {
+    background-color: aliceblue;
+    width: 75%;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0 auto;
+}
+.title{
+    text-align: center;
+}
+#message-display{
+    text-align: center;
+}
+.score-display{
+    text-align: center;
+    display: flex;
+    justify-content: space-evenly;
+    font-weight: bold;
+}
+
+.score-display *{
+    width: 100px;
+}
+.score-titles{
+    text-align: center;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.score-titles * {
+    width: 100px;
+}
