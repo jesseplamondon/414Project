@@ -431,6 +431,8 @@ function addBacteria(a) {
     let randAngle = 0;
 	let randPhi = 0;
     var bact = [];
+    var bactRad = 0.2;
+    var bx, by, bz; //accounted distance based on radius of bacteria
     do {
         var onTop = false;
         randAngle = Math.random() * 360;
@@ -438,16 +440,20 @@ function addBacteria(a) {
     } while (onTop)
     randAngleArray.push(randAngle);
 	randAnglePhiArray.push(randPhi);
-    var cx = dishRad*Math.sin(randPhi)*Math.cos(randAngle);
+    /* var cx = dishRad*Math.sin(randPhi)*Math.cos(randAngle);
     var cy = dishRad*Math.sin(randPhi)*Math.sin(randAngle);
-    var cz = dishRad*Math.cos(randAngle);
-    var bactOrig = [cx,cy,cz];
-    console.log(bactOrig);
-
+    var cz = dishRad*Math.cos(randAngle); */
+    var cx = (dishRad-bactRad)*Math.cos(randAngle);
+    var cy = (dishRad-bactRad)*Math.sin(randAngle);
+    var cz = (dishRad-bactRad)*Math.cos(randPhi);
+    //var bactOrig = [cx,cy,cz];
 		var i, ai, si, ci;
 		var j, aj, sj, cj;
 		var p1,p2;
         var SPHERE_DIV = 30;
+        bx = bactRad*Math.sin(randAngle);
+        by = bactRad*Math.cos(randAngle);
+        bz = bactRad*Math.cos(randPhi);
 		for(j=0; j<=SPHERE_DIV; j++){
 			aj = j*Math.PI/SPHERE_DIV;
 			sj = Math.sin(aj);
@@ -460,7 +466,6 @@ function addBacteria(a) {
 			}
 		}
         bacteriaVertices.push(bact);
-        console.log(bact[0]+"x"+bact[1]+"y"+bact[2]+"z");
 		 // Indices
 		
          var ind = [];
@@ -479,7 +484,6 @@ function addBacteria(a) {
 			}
 		  }
           bacteriaIndices.push(ind);
-
     addColors();
 }
 function isTouchingAny(a) {
