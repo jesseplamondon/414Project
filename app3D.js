@@ -43,6 +43,7 @@ var randAnglePhiArray = [];
 var center = [0, 0];
 var gamePoints = 0;
 var gameScore = 0;
+var program, gl;
 
 var pointsArray = [];
 var colorArray = [
@@ -66,7 +67,7 @@ var InitDemo = function() {
 	//console.log('this is working');
 
 	var canvas = document.getElementById('game-surface');
-	var gl = canvas.getContext('webgl'  , {preserveDrawingBuffer: true}  );
+	gl = canvas.getContext('webgl'  /* , {preserveDrawingBuffer: true} */  );
 
 	if (!gl){
 		console.log('webgl not supported, falling back on experimental-webgl');
@@ -103,7 +104,7 @@ var InitDemo = function() {
 		return;
 	}
 
-	var program = gl.createProgram();
+	program = gl.createProgram();
 	gl.attachShader(program,vertexShader);
 	gl.attachShader(program,fragmentShader);
 
@@ -117,12 +118,13 @@ var InitDemo = function() {
     var i, ai, si, ci;
     var j, aj, sj, cj;
     var p1,p2;
-    for(j=0; j<=12; j++){
-        aj = j*Math.PI/12;
+    var SPHERE_DIV = 50;
+    for(j=0; j<=SPHERE_DIV; j++){
+        aj = j*Math.PI/SPHERE_DIV;
         sj = Math.sin(aj);
         cj = Math.cos(aj);
-        for(i=0;i<=12;i++){
-            ai = i*2*Math.PI/12;
+        for(i=0;i<=SPHERE_DIV;i++){
+            ai = i*2*Math.PI/SPHERE_DIV;
             si=Math.sin(ai);
             ci = Math.cos(ai);
             sphereVertices.push(si*sj);
@@ -130,9 +132,9 @@ var InitDemo = function() {
             sphereVertices.push(ci*sj);
         }
     }
+    bacteriaVertices.push(sphereVertices);
 
      // Indices
-     var SPHERE_DIV = 12;
      for (j = 0; j < SPHERE_DIV; j++) {
         for (i = 0; i < SPHERE_DIV; i++) {
           p1 = j * (SPHERE_DIV+1) + i;
@@ -147,11 +149,12 @@ var InitDemo = function() {
           indices.push(p2 + 1);
         }
       }
+      bacteriaIndices.push(indices);
 	  	var colors = [];
          for(var i = 0; i<(sphereVertices.length/3); i++){
 			colors.push(0,0,i/(sphereVertices.length/3));
 		 }
-         
+        colorArray.push(colors);
          // Create and store data into vertex buffer
          var vertex_buffer = gl.createBuffer ();
          gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
@@ -165,7 +168,7 @@ var InitDemo = function() {
          // Create and store data into index buffer
          var index_buffer = gl.createBuffer ();
          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bacteriaIndices[0]), gl.STATIC_DRAW);
 
 
 	var positionAttribLocation = gl.getAttribLocation(program,'position');
@@ -180,7 +183,7 @@ var InitDemo = function() {
 		0
 		);
 	gl.enableVertexAttribArray(positionAttribLocation);
-
+    
 	gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
 	gl.vertexAttribPointer(
 		colorAttribLocation, //attribute location
@@ -190,6 +193,7 @@ var InitDemo = function() {
 		0,
 		0
 		);
+    
 	gl.enableVertexAttribArray(colorAttribLocation);
 
 	gl.useProgram(program);
@@ -290,13 +294,14 @@ var InitDemo = function() {
 			mat4.fromRotation(rotz,angle,[0,0,1]);
 			mat4.multiply(world,rotz,rotx);
 			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
-			gl.clearColor(0.5,0.8,0.8,1.0);
+			
 			//gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-			gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
             if(loopCount%10==0)
                 drawBacteria(gl, program, loopCount); 
+            gl.clearColor(0.5,0.8,0.8,1.0);
+			/* gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+			gl.drawElements(gl.TRIANGLES, bacteriaIndices[0].length, gl.UNSIGNED_SHORT, 0); 
+             */
 			requestAnimationFrame(loop);
 		//}
 	}		
@@ -330,20 +335,20 @@ var InitDemo = function() {
         oldX = ev.pageX;
         oldY = ev.pageY;
         ev.preventDefault();
-        mat4.fromRotation(rotx, (oldX - beginX)/100, [1,0,0]);
-        mat4.fromRotation(rotz, (oldY - beginY)/100, [0,0,1]);
+        mat4.fromRotation(rotx, (oldX - beginX)/100, [0,1,0]);
+        mat4.fromRotation(rotz, (oldY - beginY)/100, [1,0,0]);
         mat4.multiply(world, rotz, rotx);
         gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
 		gl.clearColor(0.5,0.8,0.8,1.0);
-		gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-
+		//gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+        drawBacteria(gl,program, loopCount);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
 	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
     };
 
 };
 function drawBacteria(gl, program, loopCount) {
-    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length < 10) {
+    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10) {
         addBacteria(bacteriaVertices.length);
     }
     if (loopCount % 28 == 0 && loopCount != 0) {
@@ -385,7 +390,18 @@ function drawBacteria(gl, program, loopCount) {
         );
         gl.enableVertexAttribArray(positionAttribLocation);
         gl.disableVertexAttribArray(bacteriaAttribLocation);
-        gl.vertexAttrib4f(bacteriaAttribLocation, colorArray[i][0], colorArray[i][1], colorArray[i][2], 1.0);
+        if(i==0){
+        // Create and store data into color buffer
+         var color_buffer = gl.createBuffer ();
+         gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorArray[0]), gl.STATIC_DRAW);
+         var colorAttribLocation = gl.getAttribLocation(program,'color');
+         gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+         gl.enableVertexAttribArray(colorAttribLocation);
+        }
+        else{
+            gl.vertexAttrib4f(bacteriaAttribLocation, colorArray[i][0], colorArray[i][1], colorArray[i][2], 1.0);
+        }
         //gl.uniform3fv(u_FragColor, new Float32Array(colorArray[i][0], colorArray[i][1], colorArray[i][2]), 0);
         gl.useProgram(program);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, bacteriaVertices[i].length / 2);
@@ -431,7 +447,7 @@ function addBacteria(a) {
     let randAngle = 0;
 	let randPhi = 0;
     var bact = [];
-    var bactRad = 0.2;
+    var bactRad = 0.3;
     var bx, by, bz; //accounted distance based on radius of bacteria
     do {
         var onTop = false;
@@ -450,7 +466,7 @@ function addBacteria(a) {
 		var i, ai, si, ci;
 		var j, aj, sj, cj;
 		var p1,p2;
-        var SPHERE_DIV = 30;
+        var SPHERE_DIV = 50;
         bx = bactRad*Math.sin(randAngle);
         by = bactRad*Math.cos(randAngle);
         bz = bactRad*Math.cos(randPhi);
@@ -465,6 +481,7 @@ function addBacteria(a) {
 				bact.push(0.2*(si*sj)+cx,0.2*cj+cy,0.2*(ci*sj)+cz);
 			}
 		}
+        console.log(bact);
         bacteriaVertices.push(bact);
 		 // Indices
 		
