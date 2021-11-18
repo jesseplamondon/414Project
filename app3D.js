@@ -66,7 +66,7 @@ var InitDemo = function() {
 	//console.log('this is working');
 
 	var canvas = document.getElementById('game-surface');
-	var gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
+	var gl = canvas.getContext('webgl'  , {preserveDrawingBuffer: true}  );
 
 	if (!gl){
 		console.log('webgl not supported, falling back on experimental-webgl');
@@ -277,7 +277,7 @@ var InitDemo = function() {
         } else if (bacteriaVertices.length == 0 && killedBacteria > 0) {
             playerWins();
         } else { */
-            
+           
             loopCount++;
             //checking if there are touching bacteria and joining them if there are
             for (let i = 0; i < bacteriaVertices.length; i++) {
@@ -345,7 +345,6 @@ var InitDemo = function() {
 function drawBacteria(gl, program, loopCount) {
     if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length < 10) {
         addBacteria(bacteriaVertices.length);
-        console.log(bacteriaVertices);
     }
     if (loopCount % 28 == 0 && loopCount != 0) {
         spreadBacteria();
@@ -461,6 +460,7 @@ function addBacteria(a) {
 			}
 		}
         bacteriaVertices.push(bact);
+        console.log(bact[0]+"x"+bact[1]+"y"+bact[2]+"z");
 		 // Indices
 		
          var ind = [];
