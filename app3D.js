@@ -448,7 +448,7 @@ function addBacteria(a) {
 		var i, ai, si, ci;
 		var j, aj, sj, cj;
 		var p1,p2;
-        var SPHERE_DIV = 12;
+        var SPHERE_DIV = 30;
 		for(j=0; j<=SPHERE_DIV; j++){
 			aj = j*Math.PI/SPHERE_DIV;
 			sj = Math.sin(aj);
@@ -457,7 +457,7 @@ function addBacteria(a) {
 				ai = i*2*Math.PI/SPHERE_DIV;
 				si=Math.sin(ai);
 				ci = Math.cos(ai);
-				bact.push((si*sj)+cx,cj+cy,(ci*sj)+cz);
+				bact.push(0.2*(si*sj)+cx,0.2*cj+cy,0.2*(ci*sj)+cz);
 			}
 		}
         bacteriaVertices.push(bact);
