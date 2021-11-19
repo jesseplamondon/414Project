@@ -313,6 +313,12 @@ var InitDemo = function() {
             //console.log("ColorArray: "+colorArray[i][0]+","+colorArray[i][1]+","+colorArray[i][2]);
             if(colorArray[i][0]==pix[0]&&colorArray[i][1]==pix[1]&&colorArray[i][2]==pix[2]&&i!=0){
                 console.log("hit");
+                bacteriaVertices.splice(i, 1);
+                colorArray.splice(i, 1);
+                randAngleArray.splice(i, 1);
+                pointsArray.splice(i, 1);
+                killedBacteria++;
+                bacteriaCountDisplay.innerHTML = killedBacteria;
             }
         }
         ev.preventDefault();
