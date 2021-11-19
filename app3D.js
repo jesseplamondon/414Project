@@ -47,7 +47,6 @@ var program, gl;
 var prevLoopAdd = 0;
 var pointsArray = [];
 var colorArray = [
-    [0.078, 0.56, 0.164]
 ]; //initialized with petry dish
 var killedBacteria = 0;
 
@@ -256,9 +255,9 @@ var InitDemo = function() {
            
             loopCount++;
             //checking if there are touching bacteria and joining them if there are
-            for (let i = 0; i < bacteriaVertices.length; i++) {
+           /*  for (let i = 0; i < bacteriaVertices.length; i++) {
                 isTouchingAny(i);
-            }
+            } */
             gameScoreHeader.innerHTML = gameScore;
     
 			angle = 185;
@@ -304,11 +303,15 @@ var InitDemo = function() {
         var pixelValues = new Uint8Array(4);
         y=canvas.height-y;
         gl.readPixels(x, y, 1,1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+        var pix = [0.0,0.0,0.0];
         for(let i = 0; i<3; i++){
-            pixelValues[i]=pixelValues[i]/255;
+            var num = pixelValues[i]/255
+            pix[i]=num.toFixed(2);
         }
-        for(let i = 1; i<colorArray.length;i++){
-            if(colorArray[i][0]==pixelValues[0]&&colorArray[i][1]==pixelValues[1]&&colorArray[i][2]==pixelValues[2]){
+        //console.log("PixelValues: "+ pix[0]+","+pix[1]+","+pix[2]);
+        for(let i = 0; i<colorArray.length;i++){
+            //console.log("ColorArray: "+colorArray[i][0]+","+colorArray[i][1]+","+colorArray[i][2]);
+            if(colorArray[i][0]==pix[0]&&colorArray[i][1]==pix[1]&&colorArray[i][2]==pix[2]&&i!=0){
                 console.log("hit");
             }
         }
@@ -537,7 +540,7 @@ function isTouchingAny(a) {
 function addColors() {
     var colors = [];
     do {
-        colors = [Math.random(), Math.random(), Math.random()];
+        colors = [Math.random().toFixed(2), Math.random().toFixed(2), Math.random().toFixed(2)];
     } while (isInArray(colorArray, colors));
     colorArray.push(colors);
 }
