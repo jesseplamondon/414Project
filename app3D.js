@@ -44,7 +44,7 @@ var center = [0, 0];
 var gamePoints = 0;
 var gameScore = 0;
 var program, gl;
-
+var prevLoopAdd = 0;
 var pointsArray = [];
 var colorArray = [
     [0.078, 0.56, 0.164]
@@ -169,7 +169,8 @@ var InitDemo = function() {
          var index_buffer = gl.createBuffer ();
          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bacteriaIndices[0]), gl.STATIC_DRAW);
-
+         gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.5,0.8,0.8,1.0);
 
 	var positionAttribLocation = gl.getAttribLocation(program,'position');
 	var colorAttribLocation = gl.getAttribLocation(program,'color');
@@ -245,35 +246,6 @@ var InitDemo = function() {
 	//////////////////////////////////
 	//            Draw              //
 	//////////////////////////////////
-	canvas.onmousedown = function (e) {
-        var mx = e.clientX,
-            my = e.clientY;
-        let rect = canvas.getBoundingClientRect();
-        x = (mx - rect.left) / dimension;
-        y = (my - rect.top) / dimension;
-        var newCoords = numToNDC(x, y);
-        x = newCoords[0];
-        y = newCoords[1];
-        for (let i = 0; i < bacteriaVertices.length; i++) {
-            if (isInBacteria(x, y, i)) {
-                if (bacteriaVertices[i].length >= 62) {
-                    if (gamePoints > 0) {
-                        gamePoints--;
-                    }
-                }
-                bacteriaVertices.splice(i, 1);
-                colorArray.splice(i, 1);
-                randAngleArray.splice(i, 1);
-                pointsArray.splice(i, 1);
-                killedBacteria++;
-                bacteriaCountDisplay.innerHTML = killedBacteria;
-               
-            }
-        }
-    }
-
-    var x = 0;
-    var y = 0;
 
 	var loop = function(time = 0){
 		/* if (gamePoints > 1) {
@@ -294,14 +266,13 @@ var InitDemo = function() {
 			mat4.fromRotation(rotz,angle,[0,0,1]);
 			mat4.multiply(world,rotz,rotx);
 			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
-			
+            if(!drag){
+                drawBacteria(gl, program, loopCount);
+            }
 			//gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-            if(loopCount%10==0)
-                drawBacteria(gl, program, loopCount); 
-            gl.clearColor(0.5,0.8,0.8,1.0);
-			/* gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-			gl.drawElements(gl.TRIANGLES, bacteriaIndices[0].length, gl.UNSIGNED_SHORT, 0); 
-             */
+            /* drawBacteria(gl, program, loopCount);  */
+            
+             
 			requestAnimationFrame(loop);
 		//}
 	}		
@@ -319,9 +290,28 @@ var InitDemo = function() {
     var oldX, oldY;
 
     canvas.onmousedown = function(ev){
+        let rect = canvas.getBoundingClientRect();
+        var x = (ev.clientX - rect.left);
+        var y = (ev.clientY - rect.top);
         drag = true;
         beginX = ev.pageX; 
         beginY = ev.pageY;
+        gl.clearColor(0.5,0.8,0.8,1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+        drawBacteria(gl, program);
+        var pixelValues = new Uint8Array(4);
+        y=canvas.height-y;
+        gl.readPixels(x, y, 1,1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+        for(let i = 0; i<3; i++){
+            pixelValues[i]=pixelValues[i]/255;
+        }
+        for(let i = 1; i<colorArray.length;i++){
+            if(colorArray[i][0]==pixelValues[0]&&colorArray[i][1]==pixelValues[1]&&colorArray[i][2]==pixelValues[2]){
+                console.log("hit");
+            }
+        }
         ev.preventDefault();
         return false;
     };
@@ -339,21 +329,26 @@ var InitDemo = function() {
         mat4.fromRotation(rotz, (oldY - beginY)/100, [1,0,0]);
         mat4.multiply(world, rotz, rotx);
         gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
-		gl.clearColor(0.5,0.8,0.8,1.0);
-		//gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-        drawBacteria(gl,program, loopCount);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+		
+		gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.5,0.8,0.8,1.0);
+        drawBacteria(gl,program);
+        
+		/* gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0); */
     };
 
 };
-function drawBacteria(gl, program, loopCount) {
-    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10) {
+function drawBacteria(gl, program) {
+    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
         addBacteria(bacteriaVertices.length);
+        prevLoopAdd=loopCount;
     }
-    if (loopCount % 28 == 0 && loopCount != 0) {
+    /* if (loopCount % 28 == 0 && loopCount != 0) {
         spreadBacteria();
-    }
+    } */
+    gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.5,0.8,0.8,1.0);
     //drawing all bacteria in bacteriaVertices array
     for (let i = 0; i < bacteriaVertices.length; i++) {
         var bacteriaAttribLocation = gl.getAttribLocation(program, 'color');
@@ -481,7 +476,6 @@ function addBacteria(a) {
 				bact.push(0.2*(si*sj)+cx,0.2*cj+cy,0.2*(ci*sj)+cz);
 			}
 		}
-        console.log(bact);
         bacteriaVertices.push(bact);
 		 // Indices
 		
