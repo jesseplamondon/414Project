@@ -242,6 +242,11 @@ var InitDemo = function() {
 	
 	mat4.identity(rotx);
 	mat4.identity(rotx);
+    angle = 185;
+			mat4.fromRotation(rotx,angle,[1,0,0]);
+			mat4.fromRotation(rotz,angle,[0,0,1]);
+			mat4.multiply(world,rotz,rotx);
+			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
 	//////////////////////////////////
 	//            Draw              //
 	//////////////////////////////////
@@ -260,11 +265,7 @@ var InitDemo = function() {
             } */
             gameScoreHeader.innerHTML = gameScore;
     
-			angle = 185;
-			mat4.fromRotation(rotx,angle,[1,0,0]);
-			mat4.fromRotation(rotz,angle,[0,0,1]);
-			mat4.multiply(world,rotz,rotx);
-			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
+			
             if(!drag){
                 drawBacteria(gl, program, loopCount);
             }
