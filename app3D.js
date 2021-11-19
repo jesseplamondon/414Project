@@ -49,6 +49,7 @@ var pointsArray = [];
 var colorArray = [
 ]; //initialized with petry dish
 var killedBacteria = 0;
+var radiusArray = [];
 
 // UI Elements
 var bacteriaCountDisplay = document.getElementById("bacteria-count");
@@ -256,7 +257,7 @@ var InitDemo = function() {
             playerLoses();
         } else if (bacteriaVertices.length == 0 && killedBacteria > 0) {
             playerWins();
-        } else { */
+        } else { */ 
            
             loopCount++;
             //checking if there are touching bacteria and joining them if there are
@@ -310,14 +311,15 @@ var InitDemo = function() {
             pix[i]=num.toFixed(2);
         }
         //console.log("PixelValues: "+ pix[0]+","+pix[1]+","+pix[2]);
-        for(let i = 0; i<colorArray.length;i++){
+        for(let i = 1; i<colorArray.length;i++){
             //console.log("ColorArray: "+colorArray[i][0]+","+colorArray[i][1]+","+colorArray[i][2]);
-            if(colorArray[i][0]==pix[0]&&colorArray[i][1]==pix[1]&&colorArray[i][2]==pix[2]&&i!=0){
-                console.log("hit");
+            if(colorArray[i][0]==pix[0]&&colorArray[i][1]==pix[1]&&colorArray[i][2]==pix[2]){
                 bacteriaVertices.splice(i, 1);
                 colorArray.splice(i, 1);
-                randAngleArray.splice(i, 1);
-                pointsArray.splice(i, 1);
+                randAngleArray.splice(i-1, 1);
+                randAnglePhiArray.splice(i-1,1);
+                radiusArray.splice(i-1,1);
+                pointsArray.splice(i-1, 1);
                 killedBacteria++;
                 bacteriaCountDisplay.innerHTML = killedBacteria;
             }
@@ -354,9 +356,9 @@ function drawBacteria(gl, program) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    /* if (loopCount % 28 == 0 && loopCount != 0) {
+    if (loopCount % 40 == 0 && loopCount != 0&&prevLoopAdd<loopCount) {
         spreadBacteria();
-    } */
+    }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
         gl.clearColor(0.5,0.8,0.8,1.0);
     //drawing all bacteria in bacteriaVertices array
@@ -413,28 +415,37 @@ function drawBacteria(gl, program) {
     }
 }
 function spreadBacteria() {
-    var radius = dishRad + bacteriaWidth;
-    var maxLength = 62;
+    var maxRad = 0.5;
+    var incRad = 0.0125;
     if (bacteriaVertices.length > 0) {
-        for (let i = 0; i < bacteriaVertices.length; i++) {
-            if (bacteriaVertices[i].length <= maxLength) {
-                gameScore += 1;
-                bacteriaVertices[i].push(
-                    center[0] + radius * Math.cos((randAngleArray[i] + bacteriaVertices[i].length / 2) * Math.PI / 180),
-                    center[1] + radius * Math.sin((randAngleArray[i] + (bacteriaVertices[i].length) / 2) * Math.PI / 180)
-                )
-                if (bacteriaVertices[i].length <= maxLength) {
-                    bacteriaVertices[i].splice(2, 0,
-                        center[0] + radius * Math.cos((randAngleArray[i] - bacteriaVertices[i].length / 4) * Math.PI / 180)
-                    );
-                    bacteriaVertices[i].splice(3, 0,
-                        center[1] + radius * Math.sin((randAngleArray[i] - (bacteriaVertices[i].length) / 4) * Math.PI / 180)
-                    );
-
-                    //setting game score text bar based on time bacteria is allowed to spread
+        for (let k = 1; k < bacteriaVertices.length; k++) {
+            if (radiusArray[k-1] <= maxRad) {
+                // replace vertices with increased radius vertices, then save increased radius to radiusArray
+                radiusArray[k-1]=radiusArray[k-1]+incRad;
+                var bact = [];
+                var cx = (dishRad-radiusArray[k-1])*Math.cos(randAngleArray[k-1]);
+                var cy = (dishRad-radiusArray[k-1])*Math.sin(randAngleArray[k-1]);
+                var cz = (dishRad-radiusArray[k-1])*Math.cos(randAnglePhiArray[k-1]);
+                var i, ai, si, ci;
+                var j, aj, sj, cj;
+                var SPHERE_DIV = 50;
+                for(j=0; j<=SPHERE_DIV; j++){
+                    aj = j*Math.PI/SPHERE_DIV;
+                    sj = Math.sin(aj);
+                    cj = Math.cos(aj);
+                    for(i=0;i<=SPHERE_DIV;i++){
+                        ai = i*2*Math.PI/SPHERE_DIV;
+                        si=Math.sin(ai);
+                        ci = Math.cos(ai);
+                        bact.push(radiusArray[k-1]*(si*sj)+cx,radiusArray[k-1]*cj+cy,radiusArray[k-1]*(ci*sj)+cz);
+                    }
                 }
-            } else if (!pointsArray[i]) {
-                pointsArray[i] = true;
+                bacteriaVertices.splice(k,1,bact);
+
+
+                
+            } else if (!pointsArray[k-1]) {
+                pointsArray[k-1] = true;
                 gamePoints++;
                 gameScoreHeader.innerHTML = gameScore;
             }else {
@@ -452,8 +463,7 @@ function addBacteria(a) {
     let randAngle = 0;
 	let randPhi = 0;
     var bact = [];
-    var bactRad = 0.3;
-    var bx, by, bz; //accounted distance based on radius of bacteria
+    var bactRad = 0.2;
     do {
         var onTop = false;
         randAngle = Math.random() * 360;
@@ -461,13 +471,9 @@ function addBacteria(a) {
     } while (onTop)
     randAngleArray.push(randAngle);
 	randAnglePhiArray.push(randPhi);
-    /* var cx = dishRad*Math.sin(randPhi)*Math.cos(randAngle);
-    var cy = dishRad*Math.sin(randPhi)*Math.sin(randAngle);
-    var cz = dishRad*Math.cos(randAngle); */
     var cx = (dishRad-bactRad)*Math.cos(randAngle);
     var cy = (dishRad-bactRad)*Math.sin(randAngle);
     var cz = (dishRad-bactRad)*Math.cos(randPhi);
-    //var bactOrig = [cx,cy,cz];
 		var i, ai, si, ci;
 		var j, aj, sj, cj;
 		var p1,p2;
@@ -506,6 +512,7 @@ function addBacteria(a) {
 		  }
           bacteriaIndices.push(ind);
     addColors();
+    radiusArray.push(bactRad);
 }
 function isTouchingAny(a) {
     if (bacteriaVertices[a].length < 62) {
@@ -558,55 +565,6 @@ function isInArray(arr, item) {
         return JSON.stringify(ele) == item_as_string;
     });
     return contains;
-}
-
-function isInDish(x, y) {
-    var d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-    return d <= dishRad;
-}
-
-function getAngle(x, y) {
-
-    var angle = Math.atan2(y, x) * 180 / Math.PI;
-    if (y < 0) {
-        angle = 360 + angle;
-    }
-    return angle;
-}
-
-function isInBacteria(x, y, i) {
-    var len = bacteriaVertices[i].length;
-    var leftAngle = getAngle(bacteriaVertices[i][len - 2], bacteriaVertices[i][len - 1]);
-    var rightAngle = getAngle(bacteriaVertices[i][2], bacteriaVertices[i][3]);
-    var d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-    let angle = 0;
-    angle = getAngle(x, y);
-    if (angle >= rightAngle && angle <= leftAngle && d < bacteriaWidth + dishRad && !isInDish(x, y)) {
-        return true;
-    } else if (rightAngle > 100 + leftAngle) {
-        if (angle < leftAngle || angle > rightAngle) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function numToNDC(x, y) {
-    var coords = [x, y];
-    var oldRange = [
-        [0, 1],
-        [1, 0]
-    ];
-    var newRange = [
-        [-1, 1],
-        [-1, 1]
-    ];
-    var newCoords = [];
-    for (let i = 0; i < coords.length; i++) {
-        var newValue = (coords[i] - oldRange[i][0]) * (newRange[i][1] - newRange[i][0]) / (oldRange[i][1] - oldRange[i][0]) + newRange[i][0];
-        newCoords[i] = Math.min(Math.max(newValue, newRange[i][0]), newRange[i][1]);
-    }
-    return newCoords;
 }
 
 function playerWins() {
