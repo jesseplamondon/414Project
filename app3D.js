@@ -50,6 +50,7 @@ var colorArray = [
 ]; //initialized with petry dish
 var killedBacteria = 0;
 var radiusArray = [];
+var downClickTime;
 
 // UI Elements
 var bacteriaCountDisplay = document.getElementById("bacteria-count");
@@ -291,6 +292,7 @@ var InitDemo = function() {
     var oldX, oldY;
 
     canvas.onmousedown = function(ev){
+        downClickTime = new Date();
         let rect = canvas.getBoundingClientRect();
         var x = (ev.clientX - rect.left);
         var y = (ev.clientY - rect.top);
@@ -334,20 +336,22 @@ var InitDemo = function() {
 
     canvas.onmousemove = function(ev){
         if (!drag) return false;
-        oldX = ev.pageX;
-        oldY = ev.pageY;
-        ev.preventDefault();
-        mat4.fromRotation(rotx, (oldX - beginX)/100, [0,1,0]);
-        mat4.fromRotation(rotz, (oldY - beginY)/100, [1,0,0]);
-        mat4.multiply(world, rotz, rotx);
-        gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
+        var currentTime = new Date();
+        var timeDiff = currentTime-downClickTime;
+        if(timeDiff>69){
+            oldX = ev.pageX;
+            oldY = ev.pageY;
+            ev.preventDefault();
+            mat4.fromRotation(rotx, (oldX - beginX)/100, [0,1,0]);
+            mat4.fromRotation(rotz, (oldY - beginY)/100, [1,0,0]);
+            mat4.multiply(world, rotz, rotx);
+            gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
+            
+            gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
+            gl.clearColor(0.5,0.8,0.8,1.0);
+            drawBacteria(gl,program);
+        }
 		
-		gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-        gl.clearColor(0.5,0.8,0.8,1.0);
-        drawBacteria(gl,program);
-        
-		/* gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-	    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0); */
     };
 
 };
