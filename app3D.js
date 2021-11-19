@@ -253,11 +253,11 @@ var InitDemo = function() {
 	//////////////////////////////////
 
 	var loop = function(time = 0){
-		/* if (gamePoints > 1) {
+		if (gamePoints > 1) {
             playerLoses();
         } else if (bacteriaVertices.length == 0 && killedBacteria > 0) {
             playerWins();
-        } else { */ 
+        } else { 
            
             loopCount++;
             //checking if there are touching bacteria and joining them if there are
@@ -275,7 +275,7 @@ var InitDemo = function() {
             
              
 			requestAnimationFrame(loop);
-		//}
+		}
 	}		
 	requestAnimationFrame(loop);
 	//file:///D:/courses/COSC414%20(Graphics)/Lab/index.html
@@ -352,11 +352,11 @@ var InitDemo = function() {
 
 };
 function drawBacteria(gl, program) {
-    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
+    if (loopCount % 71 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    if (loopCount % 40 == 0 && loopCount != 0&&prevLoopAdd<loopCount) {
+    if (loopCount % 52 == 0 && loopCount != 0&&prevLoopAdd<loopCount) {
         spreadBacteria();
     }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
