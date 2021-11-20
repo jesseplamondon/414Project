@@ -256,7 +256,7 @@ var InitDemo = function() {
 	var loop = function(time = 0){
 		if (gamePoints > 1) {
             playerLoses();
-        } else if (bacteriaVertices.length == 0 && killedBacteria > 0) {
+        } else if (bacteriaVertices.length == 1 && killedBacteria > 0) {
             playerWins();
         } else { 
            
@@ -338,7 +338,7 @@ var InitDemo = function() {
         if (!drag) return false;
         var currentTime = new Date();
         var timeDiff = currentTime-downClickTime;
-        if(timeDiff>69){
+        if(timeDiff>100){
             oldX = ev.pageX;
             oldY = ev.pageY;
             ev.preventDefault();
@@ -356,7 +356,7 @@ var InitDemo = function() {
 
 };
 function drawBacteria(gl, program) {
-    if (loopCount % 71 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
+    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
