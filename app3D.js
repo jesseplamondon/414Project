@@ -292,9 +292,11 @@ var InitDemo = function() {
     var beginX, beginY;
     var oldX, oldY;
     var dragCount = 0;
+    var timeDiff = 0;
     //takes in mouse coordinates when dragging ends
     var lastX=0;
     var lastY=0;
+    var move = false;
     canvas.onmousedown = function(ev){
         downClickTime = new Date();
         let rect = canvas.getBoundingClientRect();
@@ -335,16 +337,20 @@ var InitDemo = function() {
     };
 
     canvas.onmouseup = function(ev){
+        if(drag&&move){
+            lastX = oldX-beginX+lastX;
+            lastY = oldY-beginY+lastY;
+        }
         drag = false;
-        lastX = oldX-beginX+lastX;
-        lastY = oldY-beginY+lastY;
+        move = false;
     };
 
     canvas.onmousemove = function(ev){
         if (!drag) return false;
+        move = true;
         dragCount++;
         var currentTime = new Date();
-        var timeDiff = currentTime-downClickTime;
+        timeDiff = currentTime-downClickTime;
         //if(timeDiff>100){
             oldX = ev.pageX;
             oldY = ev.pageY;
