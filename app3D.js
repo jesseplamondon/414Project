@@ -52,6 +52,7 @@ var killedBacteria = 0;
 var radiusArray = [];
 var downClickTime;
 
+
 // UI Elements
 var bacteriaCountDisplay = document.getElementById("bacteria-count");
 var gameScoreHeader = document.getElementById("game-score");
@@ -290,7 +291,10 @@ var InitDemo = function() {
     var drag = false;
     var beginX, beginY;
     var oldX, oldY;
-
+    var dragCount = 0;
+    //takes in mouse coordinates when dragging ends
+    var lastX=0;
+    var lastY=0;
     canvas.onmousedown = function(ev){
         downClickTime = new Date();
         let rect = canvas.getBoundingClientRect();
@@ -332,25 +336,28 @@ var InitDemo = function() {
 
     canvas.onmouseup = function(ev){
         drag = false;
+        lastX = oldX-beginX+lastX;
+        lastY = oldY-beginY+lastY;
     };
 
     canvas.onmousemove = function(ev){
         if (!drag) return false;
+        dragCount++;
         var currentTime = new Date();
         var timeDiff = currentTime-downClickTime;
-        if(timeDiff>100){
+        //if(timeDiff>100){
             oldX = ev.pageX;
             oldY = ev.pageY;
             ev.preventDefault();
-            mat4.fromRotation(rotx, (oldX - beginX)/100, [0,1,0]);
-            mat4.fromRotation(rotz, (oldY - beginY)/100, [1,0,0]);
+            mat4.fromRotation(rotx, (oldX - beginX+lastX)/100, [0,1,0]);
+            mat4.fromRotation(rotz, (oldY - beginY+lastY)/100, [1,0,0]);
             mat4.multiply(world, rotz, rotx);
             gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
             
             gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
             gl.clearColor(0.5,0.8,0.8,1.0);
             drawBacteria(gl,program);
-        }
+        //}
 		
     };
 
