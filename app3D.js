@@ -373,7 +373,7 @@ function drawBacteria(gl, program) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    if (loopCount % 52 == 0 && loopCount != 0&&prevLoopAdd<loopCount) {
+    if (loopCount % 52 == 0 && loopCount != 0) {
         spreadBacteria();
     }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
@@ -434,7 +434,7 @@ function drawBacteria(gl, program) {
 function spreadBacteria() {
     var maxRad = 0.5;
     var incRad = 0.0125;
-    if (bacteriaVertices.length > 0) {
+    if (bacteriaVertices.length > 1) {
         for (let k = 1; k < bacteriaVertices.length; k++) {
             if (radiusArray[k-1] <= maxRad) {
                 // replace vertices with increased radius vertices, then save increased radius to radiusArray
