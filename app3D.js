@@ -51,6 +51,7 @@ var colorArray = [
 var killedBacteria = 0;
 var radiusArray = [];
 var downClickTime;
+var maxRad = 0.5;
 
 
 // UI Elements
@@ -263,9 +264,9 @@ var InitDemo = function() {
            
             loopCount++;
             //checking if there are touching bacteria and joining them if there are
-           /*  for (let i = 0; i < bacteriaVertices.length; i++) {
+           for (let i = 1; i < bacteriaVertices.length; i++) {
                 isTouchingAny(i);
-            } */
+            } 
             gameScoreHeader.innerHTML = gameScore;
     
 			
@@ -322,6 +323,9 @@ var InitDemo = function() {
         for(let i = 1; i<colorArray.length;i++){
             //console.log("ColorArray: "+colorArray[i][0]+","+colorArray[i][1]+","+colorArray[i][2]);
             if(colorArray[i][0]==pix[0]&&colorArray[i][1]==pix[1]&&colorArray[i][2]==pix[2]){
+                if(radiusArray[i-1]>=maxRad){
+                    gamePoints--;
+                }
                 bacteriaVertices.splice(i, 1);
                 colorArray.splice(i, 1);
                 randAngleArray.splice(i-1, 1);
@@ -369,11 +373,11 @@ var InitDemo = function() {
 
 };
 function drawBacteria(gl, program) {
-    if (loopCount % 52 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
+    if (loopCount % 30 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    if (loopCount % 52 == 0 && loopCount != 0) {
+    if (loopCount % 50 == 0 && loopCount != 0) {
         spreadBacteria();
     }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
@@ -432,7 +436,7 @@ function drawBacteria(gl, program) {
     }
 }
 function spreadBacteria() {
-    var maxRad = 0.5;
+    
     var incRad = 0.0125;
     if (bacteriaVertices.length > 1) {
         for (let k = 1; k < bacteriaVertices.length; k++) {
@@ -532,37 +536,67 @@ function addBacteria(a) {
     radiusArray.push(bactRad);
 }
 function isTouchingAny(a) {
-    if (bacteriaVertices[a].length < 62) {
-        for (let i = 0; i < bacteriaVertices.length; i++) {
+    if (radiusArray[a]<=maxRad&&bacteriaVertices.length>2) {
+        for (let i = 1; i < bacteriaVertices.length; i++) {
             var overlap = false;
-            let centreAngle = getAngle(bacteriaVertices[i][bacteriaVertices[i].length], bacteriaVertices[i][bacteriaVertices[i].length + 1]);
             if (a < i) {
-                for (let v = 2; v < bacteriaVertices[i].length; v += 2) {
-                    var aLength = bacteriaVertices[a].length;
-                    var iLength = bacteriaVertices[i].length;
-                    var aLeftAngle = getAngle(bacteriaVertices[a][aLength - 2], bacteriaVertices[a][aLength - 1]);
-                    var aRightAngle = getAngle(bacteriaVertices[a][2], bacteriaVertices[a][3]);
-                    var iLeftAngle = getAngle(bacteriaVertices[i][iLength - 2], bacteriaVertices[i][iLength - 1]);
-                    var iAngle = getAngle(bacteriaVertices[i][v], bacteriaVertices[i][v + 1]);
-                    if ((aLeftAngle < iLeftAngle && aLeftAngle > iAngle) || (aRightAngle < iLeftAngle && aRightAngle > iAngle)) {
-                        if (iAngle > centreAngle) {
-                            bacteriaVertices[a].push(bacteriaVertices[i][v], bacteriaVertices[i][v + 1]);
-                        } else {
-                            bacteriaVertices[a].splice(2, 0, bacteriaVertices[i][v]);
-                            bacteriaVertices[a].splice(3, 0, bacteriaVertices[i][v + 1]);
-                            v += 2;
-                        }
-                        overlap = true;
-                    }
+                var bxA = dishRad*Math.sin(randAngleArray[a-1]);
+                var byA = dishRad*Math.cos(randAngleArray[a-1]);
+                var bzA = dishRad*Math.cos(randAnglePhiArray[a-1]);
+                var bxI = dishRad*Math.sin(randAngleArray[i-1]);
+                var byI = dishRad*Math.cos(randAngleArray[i-1]);
+                var bzI = dishRad*Math.cos(randAnglePhiArray[i-1]);
+                var xDist = Math.abs(bxA-bxI);
+                var yDist = Math.abs(byA-byI);
+                var zDist = Math.abs(bzA-bzI);
+                var distance = 0;
+                distance = Math.pow(xDist, 2)+Math.pow(yDist, 2)+Math.pow(zDist, 0.5);
+                var radiusSum = radiusArray[a-1]+radiusArray[i-1];
+                radiusSum=radiusSum.toFixed(2);
+                if(distance<=radiusSum){
+                    overlap = true;
                 }
             }
 
             if (overlap) {
+                if(radiusArray[a-1]<=maxRad-radiusArray[i-1]){
+                    radiusArray[a-1]=radiusArray[a-1]+radiusArray[i-1];
+                }
+                else{
+                    radiusArray[a-1]=maxRad;
+                }
+                //replace bacteriaVertices[a] with new calculated vertices based on new radiusArray value
+                var bact = [];
+                var newRadius = radiusArray[a-1];
+                var cx = (dishRad-newRadius)*Math.cos(randAngleArray[a-1]);
+                var cy = (dishRad-newRadius)*Math.sin(randAngleArray[[a-1]]);
+                var cz = (dishRad-newRadius)*Math.cos(randAnglePhiArray[a-1]);
+                var q, ai, si, ci;
+                var j, aj, sj, cj;
+                var SPHERE_DIV = 50;
+                for(j=0; j<=SPHERE_DIV; j++){
+                    aj = j*Math.PI/SPHERE_DIV;
+                    sj = Math.sin(aj);
+                    cj = Math.cos(aj);
+                    for(q=0;q<=SPHERE_DIV;q++){
+                        ai = q*2*Math.PI/SPHERE_DIV;
+                        si=Math.sin(ai);
+                        ci = Math.cos(ai);
+                        bact.push(0.2*(si*sj)+cx,0.2*cj+cy,0.2*(ci*sj)+cz);
+                    }
+                }
+                //remove vertices of newer bacteria
                 bacteriaVertices.splice(i, 1);
                 colorArray.splice(i, 1);
-                randAngleArray.splice(i, 1);
-                pointsArray.splice(i, 1);
+                randAngleArray.splice(i-1, 1);
+                randAnglePhiArray.splice(i-1, 1);
+                pointsArray.splice(i-1, 1);
                 i--;
+
+                //replace old a vertices with new vertices
+
+                bacteriaVertices.splice(a, 1, bact);
+                drawBacteria(gl, program);
             }
         }
     }
