@@ -1,13 +1,13 @@
 canvas{ 
     position: relative;
-    bottom: 120px;
+    bottom: 30px;
     right: 20px;
 }
 h2{
     font-family: 'Courier New', monospace;
 }
 body{
-    background-color: #C09591;
+    background-color: rgb(127, 204, 204);
 }
 .header {
     background-color: aliceblue;
