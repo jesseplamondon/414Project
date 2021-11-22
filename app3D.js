@@ -269,13 +269,7 @@ var InitDemo = function() {
             } 
             gameScoreHeader.innerHTML = gameScore;
     
-			
-            if(!drag){
                 drawBacteria(gl, program, loopCount);
-            }
-			//gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
-            /* drawBacteria(gl, program, loopCount);  */
-            
              
 			requestAnimationFrame(loop);
 		}
@@ -295,8 +289,8 @@ var InitDemo = function() {
     var dragCount = 0;
     var timeDiff = 0;
     //takes in mouse coordinates when dragging ends
-    var lastX=0;
-    var lastY=0;
+    var lastX=angle*100;
+    var lastY=300-angle*100;
     var move = false;
     canvas.onmousedown = function(ev){
         downClickTime = new Date();
@@ -353,9 +347,6 @@ var InitDemo = function() {
         if (!drag) return false;
         move = true;
         dragCount++;
-        var currentTime = new Date();
-        timeDiff = currentTime-downClickTime;
-        //if(timeDiff>100){
             oldX = ev.pageX;
             oldY = ev.pageY;
             ev.preventDefault();
@@ -367,7 +358,6 @@ var InitDemo = function() {
             gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
             gl.clearColor(0.5,0.8,0.8,1.0);
             drawBacteria(gl,program);
-        //}
 		
     };
 
@@ -377,7 +367,7 @@ function drawBacteria(gl, program) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    if (loopCount % 50 == 0 && loopCount != 0) {
+    if (loopCount % 50 == 0) {
         spreadBacteria();
     }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
