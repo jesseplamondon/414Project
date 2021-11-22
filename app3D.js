@@ -245,51 +245,38 @@ var InitDemo = function() {
 	var rotx = new Float32Array(16);
 	
 	mat4.identity(rotx);
-	mat4.identity(rotx);
+	mat4.identity(rotz);
     angle = 185;
-			mat4.fromRotation(rotx,angle,[1,0,0]);
-			mat4.fromRotation(rotz,angle,[0,0,1]);
-			mat4.multiply(world,rotz,rotx);
-			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
+	mat4.fromRotation(rotx,angle,[1,0,0]);
+	mat4.fromRotation(rotz,angle,[0,0,1]);
+	mat4.multiply(world,rotz,rotx);
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, world);
 	//////////////////////////////////
 	//            Draw              //
 	//////////////////////////////////
 
 	var loop = function(time = 0){
+        loopCount++;
+        //checking if there are touching bacteria and joining them if there are
+        for (let i = 1; i < bacteriaVertices.length; i++) {
+            isTouchingAny(i);
+        } 
+        gameScoreHeader.innerHTML = gameScore;
+        drawBacteria(gl, program, loopCount);
 		if (gamePoints > 1) {
             playerLoses();
         } else if (bacteriaVertices.length == 1 && killedBacteria > 0) {
             playerWins();
-        } else { 
-           
-            loopCount++;
-            //checking if there are touching bacteria and joining them if there are
-           for (let i = 1; i < bacteriaVertices.length; i++) {
-                isTouchingAny(i);
-            } 
-            gameScoreHeader.innerHTML = gameScore;
-    
-                drawBacteria(gl, program, loopCount);
-             
-			requestAnimationFrame(loop);
-		}
+        } 
+		requestAnimationFrame(loop);
 	}		
 	requestAnimationFrame(loop);
-	//file:///D:/courses/COSC414%20(Graphics)/Lab/index.html
-      
-      /** Builds the mouse move handler for the canvas.
-      
-          Returns:
-            A function to be used as the mousemove handler on the canvas.
-      */
     
     var drag = false;
     var beginX, beginY;
     var oldX, oldY;
-    var dragCount = 0;
-    var timeDiff = 0;
     //takes in mouse coordinates when dragging ends
-    var lastX=angle*100;
+    var lastX=angle*100+20;
     var lastY=300-angle*100;
     var move = false;
     canvas.onmousedown = function(ev){
@@ -346,7 +333,6 @@ var InitDemo = function() {
     canvas.onmousemove = function(ev){
         if (!drag) return false;
         move = true;
-        dragCount++;
             oldX = ev.pageX;
             oldY = ev.pageY;
             ev.preventDefault();
@@ -363,11 +349,11 @@ var InitDemo = function() {
 
 };
 function drawBacteria(gl, program) {
-    if (loopCount % 30 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
+    if (loopCount % 60 == 0 && loopCount != 0 && bacteriaVertices.length <= 10 && prevLoopAdd<loopCount) {
         addBacteria(bacteriaVertices.length);
         prevLoopAdd=loopCount;
     }
-    if (loopCount % 50 == 0) {
+    if (loopCount % 60 == 0) {
         spreadBacteria();
     }
     gl.clear(gl.COLOR_BUFFER_BIT| gl.DEPTH_BUFFER_BIT);
@@ -609,6 +595,7 @@ function isInArray(arr, item) {
 }
 
 function playerWins() {
+    drawBacteria(gl, program);
     messageDisplay.innerHTML = "You Won"
     alert("You won!! You killed " + killedBacteria + " bacteria! Play again?");
     resetGame();
